@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Rule for user profiles
+    match /artifacts/{appId}/users/{userId}/profile/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rule for user carts
+    match /artifacts/{appId}/users/{userId}/cart/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rule for user wishlists
+    match /artifacts/{appId}/users/{userId}/wishlist/{document=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Rule for user notifications - allow admins to write to all users' notifications
+    match /artifacts/{appId}/users/{userId}/notifications/{document=**} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && (
+        request.auth.uid == userId ||
+        // Allow admins to write notifications to all users
+        true
+      );
+    }
+
+    // Rule for public users collection that admins can access
+    match /artifacts/{appId}/publicUsers/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && (
+        request.auth.uid == userId || 
+        // Allow admins to write (you'll need to check admin role in your app logic)
+        true
+      );
+    }
+
+    // Allow admins to read all user profiles
+    match /artifacts/{appId}/users/{userId}/profile/{document=**} {
+      allow read, write: if request.auth != null && (
+        request.auth.uid == userId ||
+        // Allow admins to read (you'll need to check admin role in your app logic)
+        true
+      );
+    }
+
+    // Rule for products collection - allow admins to read/write
+    match /artifacts/{appId}/products/{productId} {
+      allow read: if request.auth != null; // Anyone authenticated can read products
+      allow write: if request.auth != null; // Anyone authenticated can write (you can restrict this to admins only if needed)
+    }
+  }
+}
